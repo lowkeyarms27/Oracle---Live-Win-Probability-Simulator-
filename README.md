@@ -180,3 +180,34 @@ npm run dev
 | R6: 5v5 Even Start | Siege balanced opening |
 | R6: 1v3 Roamer Clutch | Single attacker clutch scenario |
 | R6: Pistol Rush 5v4 | Eco rush with player advantage |
+
+---
+
+## What I Learned Building This
+
+### Monte Carlo Simulation
+Before this project I had never run a simulation to estimate probability. The core idea is simple — run the same scenario 1,000 times with randomness, count the outcomes, and divide. What made it hard was *calibrating* those simulations against reality. Raw coin-flip logic gives you 50/50 everywhere. Getting to "Split A-site has a 42% base attacker win rate" required learning how to anchor a model against published tournament statistics and work backwards to find the right coefficients.
+
+### Machine Learning Without a Framework
+The calibrator trains with scikit-learn but runs inference completely manually — just matrix math and a sigmoid function. This forced me to actually understand what logistic regression is doing rather than treating it as a black box. I now know what a feature vector is, what standardisation does, what an intercept is, and why you need to save the scaler's mean/std alongside the weights.
+
+### Multi-Agent AI Architecture
+I'd used single AI prompts before. Here I learned to chain agents where each one has a specific role and adversarial relationship to the others. The Debater arguing *against* the Simulator's output was the key insight — a single AI confidently saying "70% ATK" is less useful than one AI saying 70% and another immediately asking "but did you account for the defuser?" That tension produces better outputs than either alone.
+
+### Real-Time Data with WebSockets
+REST gives you data when you ask for it. WebSockets keep a connection open and push data as it changes. Building the WS endpoint in FastAPI and consuming it in React taught me how state flows in a live system — how to handle reconnection, heartbeats, and the difference between "the connection is open" and "we're actually receiving predictions."
+
+### Feature Engineering
+This was the most underrated skill I picked up. Raw game state (5 players alive, 270 HP, spike planted) means nothing to an ML model. Turning it into meaningful numbers — normalised HP delta, zone aggression scores, defuser pressure as a binary flag only active post-plant — is where the domain knowledge actually lives. A better feature set matters more than a more complex model.
+
+### Windows Encoding Edge Cases
+I hit a wall where the backend returned 500 errors in production but passed all tests locally. The root cause was Python source files with Unicode em dashes (—) and box-drawing characters in string literals that Windows' cp1252 codec couldn't encode when uvicorn serialised the HTTP response. This taught me that "works on my machine" often means "works with my default locale" — and that keeping source files ASCII-clean is a production concern, not just a style preference.
+
+### Frontend Performance — Code Splitting
+The initial bundle was 599 KB because recharts (the charting library) was bundled with everything else. Adding `React.lazy()` and `Suspense` split it into per-route chunks so the charting code only loads when the user visits a page that needs it. The initial load dropped to 225 KB. I learned that bundle size is a concrete, measurable thing — not just a vague "make it fast" concern.
+
+### Dev Proxy Configuration
+The Vite dev proxy routes frontend API calls to the backend so CORS isn't an issue in development. I learned that WebSocket upgrades need their own proxy rule (`ws: true`) separate from regular HTTP, and that rule ordering matters — a more specific `/api/ws` rule must come before the broader `/api` rule or WebSocket connections silently fall through to the HTTP handler.
+
+### Probability Thinking as a Product Feature
+The hardest thing wasn't technical. It was figuring out what "useful" means for a win probability tool. A number alone isn't useful — people need to know *why* it is what it is and *what could change it*. That's why the Debater exists. Showing 78% ATK with the note "but defenders have the defuser in position — actual closer to 70%" is a product decision as much as a technical one. I learned to think of uncertainty as something to surface, not hide.
