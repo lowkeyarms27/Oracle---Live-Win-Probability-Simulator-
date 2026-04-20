@@ -1,0 +1,75 @@
+.overlay {
+  width: 100vw; height: 100vh;
+  background: transparent;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 16px;
+  font-family: var(--font-sans);
+}
+
+.widget {
+  background: rgba(8,8,8,0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 520px;
+}
+
+.teamBlock {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 90px;
+}
+
+.teamName { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.teamAtk  { color: var(--accent); }
+.teamDef  { color: var(--red); }
+
+.teamProb {
+  font-size: 28px; font-weight: 800; font-family: var(--font-mono);
+  letter-spacing: -0.03em; line-height: 1;
+}
+.probAtk  { color: var(--accent); }
+.probDef  { color: var(--red); }
+.probEven { color: var(--text-secondary); }
+
+.teamRole { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+
+.center { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+.bar {
+  height: 6px; background: rgba(255,68,68,0.3);
+  border-radius: 99px; overflow: hidden; position: relative;
+}
+.barFill {
+  position: absolute; top: 0; left: 0; bottom: 0;
+  background: var(--accent); border-radius: 99px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+.meta {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.metaLeft  { display: flex; gap: 8px; }
+.metaTag {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted); padding: 1px 6px; border: 1px solid var(--border-2); border-radius: 4px;
+}
+.tagPlant  { color: var(--yellow); border-color: rgba(255,204,0,0.3); }
+.tagLive   { color: var(--accent); border-color: var(--accent-border); }
+.confidence { font-size: 9px; color: var(--text-muted); font-family: var(--font-mono); }
+
+.factor {
+  font-size: 10px; color: var(--text-secondary); text-align: center; font-style: italic;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.factorAccent { color: var(--accent); font-weight: 700; }
+.factorRed    { color: var(--red);    font-weight: 700; }
+
+.liveDot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted);
+  animation: blink 1s ease-in-out infinite; flex-shrink: 0;
+}
+.liveDotWs { background: var(--accent); }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }

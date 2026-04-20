@@ -1,0 +1,51 @@
+.panel {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.side {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px;
+}
+.sideAtk { border-color: rgba(0,255,136,0.15); }
+.sideDef { border-color: rgba(255,68,68,0.15); }
+
+.sideTitle {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; margin-bottom: 10px;
+}
+.atkTitle { color: var(--accent); }
+.defTitle { color: var(--red); }
+
+.stat { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.statLabel { font-size: 11px; color: var(--text-muted); }
+.statValue { font-size: 13px; font-weight: 700; font-family: var(--font-mono); color: var(--text-primary); }
+
+.hpBar { width: 100%; height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+.hpFillAtk { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s; }
+.hpFillDef { height: 100%; background: var(--red); border-radius: 99px; transition: width 0.4s; }
+
+.spike {
+  grid-column: 1 / -1;
+  background: rgba(255,204,0,0.08); border: 1px solid rgba(255,204,0,0.2);
+  border-radius: var(--radius-sm); padding: 8px 12px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 700; color: var(--yellow);
+}
+.spikeDot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); animation: blink 0.8s infinite; }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+.defuserBadge {
+  margin-top: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--blue); padding: 2px 8px;
+  border: 1px solid rgba(68,136,255,0.3); border-radius: 4px;
+  background: rgba(68,136,255,0.08); display: inline-block;
+}
+
+.positioning {
+  grid-column: 1 / -1;
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 6px 12px;
+  font-size: 11px;
+}
+.posLabel { color: var(--text-muted); }
+.posValue { font-weight: 700; color: var(--text-secondary); font-family: var(--font-mono); }

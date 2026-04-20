@@ -1,0 +1,37 @@
+.page { padding: 68px 24px 64px; max-width: 900px; margin: 0 auto; }
+.header { padding: 28px 0 24px; }
+.eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 6px; }
+.title { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+.sub { font-size: 13px; color: var(--text-muted); }
+
+.timelineCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px;
+}
+.cardTitle { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 16px; }
+
+.roundList { display: flex; flex-direction: column; gap: 12px; }
+
+.roundCard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 20px;
+  border-left-width: 3px;
+}
+.roundWinAtk { border-left-color: var(--accent); }
+.roundWinDef { border-left-color: var(--red); }
+
+.roundHeader { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.roundNum { font-size: 12px; font-weight: 700; color: var(--text-muted); font-family: var(--font-mono); }
+.roundWinner { font-size: 13px; font-weight: 700; }
+.winnerAtk { color: var(--accent); }
+.winnerDef { color: var(--red); }
+.roundDuration { margin-left: auto; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+
+.roundBody { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.roundMoment { font-size: 13px; color: var(--text-secondary); }
+.roundProb { font-size: 20px; font-weight: 800; font-family: var(--font-mono); }
+.probAtk { color: var(--accent); }
+.probDef { color: var(--red); }
+
+.probBar { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.probFill { height: 100%; border-radius: 99px; transition: width 0.5s; }

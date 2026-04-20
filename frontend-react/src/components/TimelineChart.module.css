@@ -1,0 +1,13 @@
+.wrap { width: 100%; }
+.title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px;
+}
+.legend {
+  display: flex; gap: 16px; margin-top: 8px;
+}
+.legendItem {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; color: var(--text-muted);
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; }
