@@ -32,4 +32,5 @@ add_executable(chip8-emu src/main.cpp)
 target_link_libraries(chip8-emu PRIVATE chip8_core SDL2::SDL2main)
 
 # Tests
+enable_testing()
 add_subdirectory(tests)

@@ -49,6 +49,7 @@ void Display::destroy() {
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window)   SDL_DestroyWindow(window);
     SDL_Quit();
-    texture = renderer = nullptr;
-    window = nullptr;
+    texture  = nullptr;
+    renderer = nullptr;
+    window   = nullptr;
 }
