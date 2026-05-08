@@ -1,0 +1,6 @@
+session_id: 20260508-024837
+task: "Implement Chip-8 emulator core: CPU opcodes, sprite drawing, and opcode tests"
+agent_count: 3
+base_branch: master
+created: 2026-05-08T01:48:37.080543+00:00
+eval_cmd: "judge"
