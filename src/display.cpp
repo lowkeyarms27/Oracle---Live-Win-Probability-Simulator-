@@ -18,21 +18,40 @@ bool Display::init(const char* title) {
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) return false;
 
+    return ensureTexture(DISPLAY_W, DISPLAY_H);
+}
+
+bool Display::ensureTexture(int width, int height) {
+    if (texture && textureW == width && textureH == height) return true;
+
+    if (texture) {
+        SDL_DestroyTexture(texture);
+        texture = nullptr;
+    }
+
     texture = SDL_CreateTexture(
         renderer,
         SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_STREAMING,
-        DISPLAY_W, DISPLAY_H
+        width, height
     );
-    return texture != nullptr;
+    if (!texture) return false;
+
+    textureW = width;
+    textureH = height;
+    SDL_SetWindowSize(window, width * SCALE, height * SCALE);
+    return true;
 }
 
-void Display::render(const uint8_t* framebuffer) {
-    uint32_t pixels[DISPLAY_W * DISPLAY_H];
-    for (int i = 0; i < DISPLAY_W * DISPLAY_H; ++i)
+void Display::render(const uint8_t* framebuffer, int width, int height) {
+    if (!ensureTexture(width, height)) return;
+
+    uint32_t pixels[DISPLAY_PIXELS_MAX];
+    int count = width * height;
+    for (int i = 0; i < count; ++i)
         pixels[i] = framebuffer[i] ? 0xFFFFFFFF : 0x000000FF;
 
-    SDL_UpdateTexture(texture, nullptr, pixels, DISPLAY_W * sizeof(uint32_t));
+    SDL_UpdateTexture(texture, nullptr, pixels, width * sizeof(uint32_t));
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);

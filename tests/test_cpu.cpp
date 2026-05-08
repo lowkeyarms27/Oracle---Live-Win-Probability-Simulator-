@@ -123,6 +123,16 @@ TEST_CASE("8XY5: SUB sets VF=0 when Vx < Vy (borrow)", "[cpu][opcodes]") {
     REQUIRE(cpu.V[0xF] == 0);
 }
 
+TEST_CASE("8XY5: SUB sets VF=1 when Vx == Vy (no borrow)", "[cpu][opcodes]") {
+    Chip8 cpu;
+    cpu.initialize();
+    cpu.V[0] = 0x2A;
+    cpu.V[1] = 0x2A;
+    runOpcode(cpu, 0x8015);
+    REQUIRE(cpu.V[0] == 0x00);
+    REQUIRE(cpu.V[0xF] == 1);
+}
+
 // ── 1NNN: JP addr ─────────────────────────────────────────────────────────────
 TEST_CASE("1NNN: JP sets PC correctly", "[cpu][opcodes]") {
     Chip8 cpu;
@@ -158,6 +168,28 @@ TEST_CASE("00EE: RET pops PC from stack", "[cpu][opcodes]") {
     runOpcode(cpu, 0x00EE);
     REQUIRE(cpu.PC == 0x300);
     REQUIRE(cpu.SP == 0);
+}
+
+TEST_CASE("00FE/00FF: SCHIP mode switches display resolution", "[cpu][opcodes][schip]") {
+    Chip8 cpu;
+    cpu.initialize();
+
+    runOpcode(cpu, 0x00FF); // high-res
+    REQUIRE(cpu.highRes == true);
+    REQUIRE(cpu.getDisplayWidth() == DISPLAY_W_HI);
+    REQUIRE(cpu.getDisplayHeight() == DISPLAY_H_HI);
+
+    runOpcode(cpu, 0x00FE); // low-res
+    REQUIRE(cpu.highRes == false);
+    REQUIRE(cpu.getDisplayWidth() == DISPLAY_W);
+    REQUIRE(cpu.getDisplayHeight() == DISPLAY_H);
+}
+
+TEST_CASE("00FD: SCHIP exit halts execution", "[cpu][opcodes][schip]") {
+    Chip8 cpu;
+    cpu.initialize();
+    runOpcode(cpu, 0x00FD);
+    REQUIRE(cpu.halted == true);
 }
 
 TEST_CASE("2NNN then 00EE: CALL/RET round-trip", "[cpu][opcodes]") {
@@ -256,6 +288,26 @@ TEST_CASE("DXYN: no collision leaves VF=0", "[cpu][opcodes]") {
     cpu.I = FONT_START;
     runOpcode(cpu, 0xD011);
     REQUIRE(cpu.V[0xF] == 0);
+}
+
+TEST_CASE("DXY0 in high-res draws 16x16 sprite", "[cpu][opcodes][schip]") {
+    Chip8 cpu;
+    cpu.initialize();
+    runOpcode(cpu, 0x00FF); // high-res mode
+
+    cpu.V[0] = 0;
+    cpu.V[1] = 0;
+    cpu.I = 0x300;
+
+    // 16 rows of 0x8000: left-most pixel set each row
+    for (int r = 0; r < 16; ++r) {
+        cpu.memory[0x300 + r * 2] = 0x80;
+        cpu.memory[0x300 + r * 2 + 1] = 0x00;
+    }
+
+    runOpcode(cpu, 0xD010); // DXY0
+    for (int r = 0; r < 16; ++r)
+        REQUIRE(cpu.display[r * DISPLAY_W_HI] == 1);
 }
 
 // ── FX33: BCD ────────────────────────────────────────────────────────────────
@@ -484,6 +536,37 @@ TEST_CASE("FX29: I points to font sprite for digit", "[cpu][opcodes]") {
     cpu.V[0] = 0x5; // digit 5
     runOpcode(cpu, 0xF029);
     REQUIRE(cpu.I == FONT_START + 5 * 5);
+}
+
+TEST_CASE("FX30: I points to large SCHIP font sprite for digit", "[cpu][opcodes][schip]") {
+    Chip8 cpu;
+    cpu.initialize();
+    cpu.V[0] = 0xA;
+    runOpcode(cpu, 0xF030);
+    REQUIRE(cpu.I == FONT_START + 80 + 10 * 10);
+}
+
+TEST_CASE("00CN: SCHIP scroll down by N lines", "[cpu][opcodes][schip]") {
+    Chip8 cpu;
+    cpu.initialize();
+    cpu.display[0] = 1; // top-left
+    runOpcode(cpu, 0x00C2); // down 2
+    REQUIRE(cpu.display[0] == 0);
+    REQUIRE(cpu.display[2 * DISPLAY_W] == 1);
+}
+
+TEST_CASE("00FB/00FC: SCHIP horizontal scroll", "[cpu][opcodes][schip]") {
+    Chip8 cpu;
+    cpu.initialize();
+
+    cpu.display[0] = 1;
+    runOpcode(cpu, 0x00FB); // right 4
+    REQUIRE(cpu.display[0] == 0);
+    REQUIRE(cpu.display[4] == 1);
+
+    runOpcode(cpu, 0x00FC); // left 4
+    REQUIRE(cpu.display[4] == 0);
+    REQUIRE(cpu.display[0] == 1);
 }
 
 // ── EX9E / EXA1: key skip ─────────────────────────────────────────────────────

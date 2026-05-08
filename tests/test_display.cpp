@@ -10,6 +10,6 @@ TEST_CASE("Display dimensions are correct", "[display]") {
 TEST_CASE("Framebuffer initializes to zero", "[display]") {
     Chip8 cpu;
     cpu.initialize();
-    for (int i = 0; i < DISPLAY_W * DISPLAY_H; ++i)
+    for (int i = 0; i < DISPLAY_PIXELS_MAX; ++i)
         REQUIRE(cpu.display[i] == 0);
 }

@@ -4,6 +4,9 @@
 
 constexpr int DISPLAY_W = 64;
 constexpr int DISPLAY_H = 32;
+constexpr int DISPLAY_W_HI = 128;
+constexpr int DISPLAY_H_HI = 64;
+constexpr int DISPLAY_PIXELS_MAX = DISPLAY_W_HI * DISPLAY_H_HI;
 constexpr int MEMORY_SIZE = 4096;
 constexpr int STACK_DEPTH = 16;
 constexpr int NUM_REGISTERS = 16;
@@ -21,14 +24,18 @@ public:
     uint16_t stack[STACK_DEPTH]{};
     uint8_t  delayTimer{};
     uint8_t  soundTimer{};
-    uint8_t  display[DISPLAY_W * DISPLAY_H]{};
+    uint8_t  display[DISPLAY_PIXELS_MAX]{};
     uint8_t  keys[NUM_KEYS]{};
     bool     drawFlag{};
+    bool     highRes{};
+    bool     halted{};
 
     void initialize();
     bool loadROM(const std::string& path);
     void emulateCycle();
     void updateTimers();
+    int getDisplayWidth() const;
+    int getDisplayHeight() const;
 
 private:
     void loadFont();

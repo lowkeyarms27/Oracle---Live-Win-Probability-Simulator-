@@ -23,11 +23,34 @@ static constexpr uint8_t FONT_SET[80] = {
     0xF0,0x80,0xF0,0x80,0x80  // F
 };
 
+static constexpr uint8_t FONT_SET_LARGE[160] = {
+    0x3C,0x66,0xC3,0xC3,0xC3,0xC3,0xC3,0xC3,0x66,0x3C, // 0
+    0x18,0x38,0x78,0x18,0x18,0x18,0x18,0x18,0x18,0x7E, // 1
+    0x3C,0x66,0xC3,0x03,0x06,0x0C,0x18,0x30,0x60,0xFF, // 2
+    0x3C,0x66,0xC3,0x03,0x1E,0x03,0x03,0xC3,0x66,0x3C, // 3
+    0x06,0x0E,0x1E,0x36,0x66,0xC6,0xFF,0x06,0x06,0x06, // 4
+    0xFF,0xC0,0xC0,0xFC,0x06,0x03,0x03,0xC3,0x66,0x3C, // 5
+    0x3C,0x66,0xC0,0xC0,0xFC,0xC6,0xC3,0xC3,0x66,0x3C, // 6
+    0xFF,0x03,0x06,0x0C,0x18,0x18,0x18,0x18,0x18,0x18, // 7
+    0x3C,0x66,0xC3,0x66,0x3C,0x66,0xC3,0xC3,0x66,0x3C, // 8
+    0x3C,0x66,0xC3,0xC3,0x67,0x3F,0x03,0x03,0x66,0x3C, // 9
+    0x18,0x3C,0x66,0xC3,0xC3,0xFF,0xC3,0xC3,0xC3,0xC3, // A
+    0xFC,0x66,0x63,0x63,0x7E,0x63,0x63,0x63,0x66,0xFC, // B
+    0x3C,0x66,0xC3,0xC0,0xC0,0xC0,0xC0,0xC3,0x66,0x3C, // C
+    0xF8,0x6C,0x66,0x63,0x63,0x63,0x63,0x66,0x6C,0xF8, // D
+    0xFF,0x60,0x60,0x60,0x7C,0x60,0x60,0x60,0x60,0xFF, // E
+    0xFF,0x60,0x60,0x60,0x7C,0x60,0x60,0x60,0x60,0x60  // F
+};
+
+static constexpr uint16_t FONT_LARGE_START = FONT_START + sizeof(FONT_SET);
+
 void Chip8::initialize() {
     PC = ROM_START;
     I  = 0;
     SP = 0;
     drawFlag = false;
+    highRes = false;
+    halted = false;
     std::memset(memory,  0, sizeof(memory));
     std::memset(V,       0, sizeof(V));
     std::memset(stack,   0, sizeof(stack));
@@ -40,6 +63,7 @@ void Chip8::initialize() {
 
 void Chip8::loadFont() {
     std::memcpy(memory + FONT_START, FONT_SET, sizeof(FONT_SET));
+    std::memcpy(memory + FONT_LARGE_START, FONT_SET_LARGE, sizeof(FONT_SET_LARGE));
 }
 
 bool Chip8::loadROM(const std::string& path) {
@@ -55,6 +79,7 @@ bool Chip8::loadROM(const std::string& path) {
 }
 
 void Chip8::emulateCycle() {
+    if (halted) return;
     uint16_t opcode = (memory[PC] << 8) | memory[PC + 1];
     PC += 2;
     executeOpcode(opcode);
@@ -82,6 +107,54 @@ void Chip8::executeOpcode(uint16_t opcode) {
         } else if (opcode == 0x00EE) {
             // RET
             PC = stack[--SP];
+        } else if (opcode == 0x00FD) {
+            // SCHIP: EXIT
+            halted = true;
+        } else if (opcode == 0x00FE) {
+            // SCHIP: LOW-RES MODE
+            highRes = false;
+            drawFlag = true;
+        } else if (opcode == 0x00FF) {
+            // SCHIP: HIGH-RES MODE
+            highRes = true;
+            drawFlag = true;
+        } else if (opcode == 0x00FB) {
+            // SCHIP: SCROLL RIGHT 4
+            const int w = getDisplayWidth();
+            const int h = getDisplayHeight();
+            for (int y = 0; y < h; ++y) {
+                for (int x = w - 1; x >= 0; --x) {
+                    int dst = y * w + x;
+                    int srcX = x - 4;
+                    display[dst] = (srcX >= 0) ? display[y * w + srcX] : 0;
+                }
+            }
+            drawFlag = true;
+        } else if (opcode == 0x00FC) {
+            // SCHIP: SCROLL LEFT 4
+            const int w = getDisplayWidth();
+            const int h = getDisplayHeight();
+            for (int y = 0; y < h; ++y) {
+                for (int x = 0; x < w; ++x) {
+                    int dst = y * w + x;
+                    int srcX = x + 4;
+                    display[dst] = (srcX < w) ? display[y * w + srcX] : 0;
+                }
+            }
+            drawFlag = true;
+        } else if ((opcode & 0xFFF0) == 0x00C0) {
+            // SCHIP: SCROLL DOWN N
+            const int n = N;
+            const int w = getDisplayWidth();
+            const int h = getDisplayHeight();
+            for (int y = h - 1; y >= 0; --y) {
+                for (int x = 0; x < w; ++x) {
+                    int dst = y * w + x;
+                    int srcY = y - n;
+                    display[dst] = (srcY >= 0) ? display[srcY * w + x] : 0;
+                }
+            }
+            drawFlag = true;
         }
         break;
 
@@ -134,7 +207,7 @@ void Chip8::executeOpcode(uint16_t opcode) {
             break;
         }
         case 0x5: {
-            uint8_t borrow = (V[X] > V[Y]) ? 1 : 0;
+            uint8_t borrow = (V[X] >= V[Y]) ? 1 : 0;
             V[X] -= V[Y];
             V[0xF] = borrow;
             break;
@@ -182,18 +255,39 @@ void Chip8::executeOpcode(uint16_t opcode) {
 
     case 0xD: {
         // DRW Vx, Vy, nibble
-        uint8_t xPos = V[X] % DISPLAY_W;
-        uint8_t yPos = V[Y] % DISPLAY_H;
+        const int w = getDisplayWidth();
+        const int h = getDisplayHeight();
+        uint8_t xPos = V[X] % w;
+        uint8_t yPos = V[Y] % h;
         V[0xF] = 0;
-        for (int row = 0; row < N; ++row) {
-            uint8_t spriteByte = memory[I + row];
-            for (int col = 0; col < 8; ++col) {
-                if (spriteByte & (0x80 >> col)) {
-                    int px = (xPos + col) % DISPLAY_W;
-                    int py = (yPos + row) % DISPLAY_H;
-                    int idx = py * DISPLAY_W + px;
-                    if (display[idx]) V[0xF] = 1;
-                    display[idx] ^= 1;
+
+        auto drawPixel = [&](int px, int py) {
+            int idx = py * w + px;
+            if (display[idx]) V[0xF] = 1;
+            display[idx] ^= 1;
+        };
+
+        if (highRes && N == 0) {
+            // SCHIP: 16x16 sprite, two bytes per row.
+            for (int row = 0; row < 16; ++row) {
+                uint16_t spriteRow = (static_cast<uint16_t>(memory[I + row * 2]) << 8) | memory[I + row * 2 + 1];
+                for (int col = 0; col < 16; ++col) {
+                    if (spriteRow & (0x8000 >> col)) {
+                        int px = (xPos + col) % w;
+                        int py = (yPos + row) % h;
+                        drawPixel(px, py);
+                    }
+                }
+            }
+        } else {
+            for (int row = 0; row < N; ++row) {
+                uint8_t spriteByte = memory[I + row];
+                for (int col = 0; col < 8; ++col) {
+                    if (spriteByte & (0x80 >> col)) {
+                        int px = (xPos + col) % w;
+                        int py = (yPos + row) % h;
+                        drawPixel(px, py);
+                    }
                 }
             }
         }
@@ -241,6 +335,9 @@ void Chip8::executeOpcode(uint16_t opcode) {
         case 0x29:
             I = FONT_START + V[X] * 5;
             break;
+        case 0x30:
+            I = FONT_LARGE_START + V[X] * 10;
+            break;
         case 0x33:
             memory[I]     = V[X] / 100;
             memory[I + 1] = (V[X] / 10) % 10;
@@ -257,4 +354,12 @@ void Chip8::executeOpcode(uint16_t opcode) {
         }
         break;
     }
+}
+
+int Chip8::getDisplayWidth() const {
+    return highRes ? DISPLAY_W_HI : DISPLAY_W;
+}
+
+int Chip8::getDisplayHeight() const {
+    return highRes ? DISPLAY_H_HI : DISPLAY_H;
 }

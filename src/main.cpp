@@ -54,11 +54,13 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < CYCLES_PER_FRAME; ++i)
             cpu.emulateCycle();
 
+        if (cpu.halted) running = false;
+
         cpu.updateTimers();
         audio.beep(cpu.soundTimer > 0);
 
         if (cpu.drawFlag) {
-            display.render(cpu.display);
+            display.render(cpu.display, cpu.getDisplayWidth(), cpu.getDisplayHeight());
             cpu.drawFlag = false;
         }
 

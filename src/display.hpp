@@ -10,12 +10,16 @@ public:
     ~Display();
 
     bool init(const char* title);
-    void render(const uint8_t* framebuffer);
+    void render(const uint8_t* framebuffer, int width, int height);
     void clear();
     void destroy();
 
 private:
+    bool ensureTexture(int width, int height);
+
     SDL_Window*   window{};
     SDL_Renderer* renderer{};
     SDL_Texture*  texture{};
+    int textureW{};
+    int textureH{};
 };
